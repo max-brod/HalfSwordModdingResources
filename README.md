@@ -2,7 +2,9 @@
 A collection of modding resources for Half Sword.
 
 ## Engine
-Half Sword (as of the Demo v0.4 or newer, Aprin 2025) is built on Unreal Engine 5.4.4. 
+Half Sword (as of the Demo v0.4 or newer, April 2025) is built on Unreal Engine 5.4.4. 
+
+(The older versions like Demo v0.3 used to be on UE 5.1)
 
 ## Modding approaches
 In general, at run time you can inject your code or modify/objects variables in memory, or modify game assets on disk.
@@ -11,7 +13,7 @@ For Half Sword, as it is based on Unreal Engine, all of that can be done with re
 
 For an introduction to UE modding, take a look at this guide by Dmgvol: https://github.com/Dmgvol/UE_Modding
 
-The rest of this document assumes that you are familiar with that, and can already do something to the game and are looking for exact pointers to things you want to find/change.
+The rest of this document assumes that you are familiar with that, and can already do something to the game and are looking for exact hints for things you want to find/change.
 
 ## Finding interesting objects in UE
 Note that UE has its own object system that builds on top of C++ object system. Objects contain other objects as members. Some objects are arrays or other collections of objects that you have to access accordingly. 
@@ -23,11 +25,14 @@ Find the first instance of this object in memory and you get the current map.
 
 ### WorldSettings
 This is an UE object that holds interesting settings like the game speed. Find the first instance of the `WorldSettings` class and you have it.
-* The game speed is `TimeDilation` under WorldSettings (this is standard for most UE-based games)
+* The game speed is `TimeDilation` under `WorldSettings` (this is standard for most UE-based games)
   * If `TimeDilation` is 1.0, then it is normal speed
   * `TimeDilation` < 1.0, means speed is slower, 0.1 = 10x slower
   * `TimeDilation` > 1.0, means speed is faster, 10.0 = 10x faster
   * A good value is usually 0.1 ~ 5.0 or as you wish, as long as it does not crash.
+* Various interesting physics engine properties are also under `WorldSettings`
+  * `bWorldGravitySet` is the boolean flag to toggle gravity override if true
+  * `WorldGravityZ` is the gravity force, standard is 980.0
 
 ### Player character
 * In the Gauntlet mode, the player character is a member of the map object named `Player (Temp)`
@@ -52,14 +57,18 @@ Only the game devs have a good idea what all these mean, but we can guess of cou
 | Fallen? | `Fallen` | boolean |
 | Character dead? | `DED` | boolean |
 | Get Up Rate | `Get Up Rate` | float, usually 0.0-1.0 but can be more, how fast does the character get up from the ground |
-| Regen Rate | `Regen Rate` | float |
+| Regen Rate | `Regen Rate` | float, main health regeneration rate, above zero means regeneration is working |
 | Running Speed Rate | `Running Speed Rate` | float, makes character run faster or slower |
+| Walk Speed Rate | `Walk Speed Rate Run` | float, makes character walk faster or slower |
+| Aiming speed | `Walk Speed Rate Aim` | float, makes character aim faster or slower |
 | Muscle Power | `Muscle Power` | float, this seems to be the base modifier for character strength |
+| Hand grip strength | `R Grab Force Limit`, `L Grab Force Limit`| float, maximum force when the hand grip breaks and releases |
+| Hand rigidity | `Hands Rigidity (Gauntlets)` | float, makes the hands more or less rigid |
 
 On top of that, the character object has the following objects as members:
 | Attribute/stat | Where to find it | Comments |
 | ------------------ | ------------------ | ------------------ |
-| Controller object | `Controller` | UE `Controller` class, which is actually an instance of the UE `PlayerController` class for the player character, or `AI_BP_C` class for NPCs |
+| Controller object | `Controller` | UE `Controller` class, which is actually an instance of the UE `PlayerController` class for the player character, or `AIController`(`AI_BP_C`) class for NPCs |
 | Mesh object | `Mesh` | UE `Mesh` class |
 
 The player object has the following functions that can be called on it:
@@ -82,4 +91,13 @@ The player object has the following functions that can be called on it:
 
 ### Assets
 Assets can be explored with any asset viewing tool for UE 5, e.g. the latest version of FModel.
-The assets have paths like `/Game/Assets/Weapons/`, `/Game/Assets/Armor/` and so on.
+
+The assets have obvious paths like `/Game/Assets/Weapons/`, `/Game/Assets/Armor/` and so on.
+
+### Spawning anything
+Spawning the assets or NPCs in the mod can be done by calling UE's `UWorld::SpawnActor()` function and supplying the class and other parameters, e.g. location or `FTransform` (location+rotation+scale).
+
+The assets must be loaded before they can be spawned.
+
+#### Despawning 
+To despawn an object, call its `K2_DestroyActor()` method.
