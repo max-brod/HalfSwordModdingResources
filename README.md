@@ -15,6 +15,13 @@ For an introduction to UE modding, take a look at this guide by Dmgvol: https://
 
 The rest of this document assumes that you are familiar with that, and can already do something to the game and are looking for exact hints for things you want to find/change.
 
+## Package encryption key
+
+One specific roadblock for editing on-disk assets is the `.pak` archive's 256-bit AES Encryption key. 
+The encryption key for the game is provided here for convenience. Depending on your tool of choice, you may need to strip the `0x` hex prefix.
+
+- Half Sword Demo v0.5: `0xBCBF7B45A4A8150D06F7B955BC25EF5CE603470F508302CAD0EB48FEA2D91517`
+
 ## Finding interesting objects in UE
 Note that UE has its own object system that builds on top of C++ object system. Objects contain other objects as members. Some objects are arrays or other collections of objects that you have to access accordingly. 
 
